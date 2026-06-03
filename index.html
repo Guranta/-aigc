@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+  <title>AIGC 降重教程</title>
+  <link rel="stylesheet" href="assets/css/style.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+</head>
+<body>
+  <header class="top-bar">
+    <h1>AIGC 降重教程</h1>
+    <span class="subtitle">查重文档 + 提示词对照</span>
+    <button class="btn-admin" id="btnAdmin" title="管理员编辑">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+        <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+      </svg>
+    </button>
+  </header>
+
+  <main class="split-layout">
+    <!-- 左侧：PDF 文档展示 -->
+    <section class="panel panel-left">
+      <div class="panel-header">
+        <h2>查重文档</h2>
+        <div class="header-tags">
+          <span class="tag tag-red">AIGC 检出率 ≥ 60%</span>
+          <span class="tag tag-page">仅展示第 1 页</span>
+        </div>
+      </div>
+      <div class="pdf-container" id="pdfContainer">
+        <canvas id="pdfCanvas"></canvas>
+        <div class="highlight-overlay" id="highlightOverlay"></div>
+        <div class="pdf-placeholder" id="pdfPlaceholder">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#999" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          <p>请将 PDF 放入 <code>assets/pdf/</code> 目录</p>
+          <p class="small">并修改 <code>assets/js/app.js</code> 中的 PDF_PATH</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 右侧：提示词 -->
+    <section class="panel panel-right">
+      <div class="panel-header">
+        <h2>降重提示词</h2>
+        <div class="actions" id="adminActions" style="display:none">
+          <button class="btn btn-sm" id="btnSave">保存</button>
+          <button class="btn btn-sm btn-outline" id="btnReset">恢复默认</button>
+          <button class="btn btn-sm btn-outline" id="btnLock">锁定</button>
+        </div>
+      </div>
+
+      <!-- 只读展示（访客默认） -->
+      <div class="prompt-display" id="promptDisplay"></div>
+
+      <!-- 编辑模式（管理员） -->
+      <div class="prompt-editor-wrap" id="editorWrap" style="display:none">
+        <textarea class="prompt-editor" id="promptEditor" spellcheck="false"></textarea>
+      </div>
+
+      <div class="prompt-footer">
+        <span class="char-count" id="charCount">0 字</span>
+        <span class="save-status" id="saveStatus"></span>
+      </div>
+    </section>
+  </main>
+
+  <script src="assets/js/app.js"></script>
+</body>
+</html>
