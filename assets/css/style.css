@@ -489,6 +489,19 @@ body {
   color: var(--ink-2);
   animation: fadeUp .8s 1s both;
 }
+.footer p + p { margin-top: 6px; }
+.footer-beian a {
+  color: var(--ink-2);
+  text-decoration: none;
+  font-size: 12px;
+  opacity: 0.85;
+  transition: color .15s ease, opacity .15s ease;
+}
+.footer-beian a:hover {
+  color: #b537f2;
+  opacity: 1;
+  text-decoration: underline;
+}
 
 /* ============================================================
    GitHub Star 按钮
