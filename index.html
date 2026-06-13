@@ -1,70 +1,189 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-  <title>AIGC 降重教程</title>
-  <link rel="stylesheet" href="assets/css/style.css">
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>✨ AIGC 降重小工具 ✨</title>
+  <meta name="description" content="一段提示词，把 AI 写的字改回人写的样子。复制到 DeepSeek 即可使用。" />
+  <link rel="stylesheet" href="assets/css/style.css" />
 </head>
 <body>
-  <header class="top-bar">
-    <h1>AIGC 降重教程</h1>
-    <span class="subtitle">查重文档 + 提示词对照</span>
-    <button class="btn-admin" id="btnAdmin" title="管理员编辑">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
-        <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-      </svg>
-    </button>
-  </header>
+  <!-- 顶部滚动进度条 -->
+  <div class="progress-bar" aria-hidden="true"><div class="progress-bar__fill" id="progressFill"></div></div>
 
-  <main class="split-layout">
-    <!-- 左侧：PDF 文档展示 -->
-    <section class="panel panel-left">
-      <div class="panel-header">
-        <h2>查重文档</h2>
-        <div class="header-tags">
-          <span class="tag tag-red">AIGC 检出率 ≥ 60%</span>
-          <span class="tag tag-page">仅展示第 1 页</span>
-        </div>
+  <!-- 鼠标跟随光晕 -->
+  <div class="cursor-glow" aria-hidden="true" id="cursorGlow"></div>
+
+  <!-- 背景浮动 blob -->
+  <div class="blobs" aria-hidden="true">
+    <span class="blob blob--pink"></span>
+    <span class="blob blob--blue"></span>
+    <span class="blob blob--yellow"></span>
+    <span class="blob blob--purple"></span>
+    <span class="blob blob--mint"></span>
+    <span class="blob blob--orange"></span>
+  </div>
+
+  <!-- 飘动 emoji -->
+  <div class="sparkles" aria-hidden="true">
+    <span>✨</span><span>🫧</span><span>💫</span><span>⭐</span><span>🩷</span><span>🩵</span>
+    <span>🌟</span><span>💖</span><span>🩵</span><span>💫</span><span>🫧</span><span>⭐</span>
+  </div>
+
+  <main class="container">
+    <!-- HERO -->
+    <header class="hero">
+      <div class="badge">🚀 一键复制 · 即贴即用</div>
+      <h1 class="title">
+        <span class="title__emoji">✨</span>
+        AIGC&nbsp;降重小工具
+        <span class="title__emoji">✨</span>
+      </h1>
+      <p class="subtitle">把 AI 写的字，改回<strong>人写的样子</strong>。</p>
+      <p class="hint">只需一段提示词，配合 DeepSeek，就能让 AIGC 检出率从 60%+ 掉下来 📉</p>
+      <a class="btn btn--star hero-star" href="https://github.com/Guranta/-aigc" target="_blank" rel="noopener">
+        <svg class="btn-icon" viewBox="0 0 16 16" width="18" height="18" aria-hidden="true" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+        <span>在 GitHub 上给我 ⭐</span>
+      </a>
+    </header>
+
+    <!-- 提示词卡片 -->
+    <section class="glass card prompt-card" id="promptCard">
+      <div class="card-head">
+        <span class="card-emoji">📋</span>
+        <h2>完整提示词</h2>
+        <span class="pill" id="charPill">0 字</span>
       </div>
-      <div class="pdf-container" id="pdfContainer">
-        <canvas id="pdfCanvas"></canvas>
-        <div class="highlight-overlay" id="highlightOverlay"></div>
-        <div class="pdf-placeholder" id="pdfPlaceholder">
-          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#999" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-          <p>请将 PDF 放入 <code>assets/pdf/</code> 目录</p>
-          <p class="small">并修改 <code>assets/js/app.js</code> 中的 PDF_PATH</p>
+      <pre class="prompt-body" id="promptBody"></pre>
+      <div class="actions">
+        <button class="btn btn--primary" id="btnCopy">
+          <span class="btn-emoji">📥</span>
+          <span class="btn-text">一键复制</span>
+        </button>
+        <button class="btn btn--ghost" id="btnDownload">
+          <span class="btn-emoji">📄</span>
+          <span class="btn-text">下载 .txt</span>
+        </button>
+        <a class="btn btn--accent" id="btnDeepseek" href="https://chat.deepseek.com" target="_blank" rel="noopener">
+          <span class="btn-emoji">🐳</span>
+          <span class="btn-text">打开 DeepSeek</span>
+        </a>
+      </div>
+    </section>
+
+    <!-- 使用步骤 -->
+    <section class="steps">
+      <h2 class="section-title"><span>🪜</span> 四步搞定</h2>
+      <div class="step-grid">
+        <div class="glass card step">
+          <div class="step__num">1</div>
+          <div class="step__emoji">🐳</div>
+          <h3>打开 DeepSeek</h3>
+          <p>访问 <code>chat.deepseek.com</code>，登录账号。</p>
+        </div>
+        <div class="glass card step">
+          <div class="step__num">2</div>
+          <div class="step__emoji">📋</div>
+          <h3>粘贴提示词</h3>
+          <p>点击上面的「一键复制」，把整段提示词粘到对话框。</p>
+        </div>
+        <div class="glass card step">
+          <div class="step__num">3</div>
+          <div class="step__emoji">✍️</div>
+          <h3>加上你的原文</h3>
+          <p>在末尾追加一行：<code>原文：[你要降重的段落]</code></p>
+        </div>
+        <div class="glass card step">
+          <div class="step__num">4</div>
+          <div class="step__emoji">🎉</div>
+          <h3>复制「修改后」</h3>
+          <p>AI 会输出 <code>修改后：</code> 开头的结果，直接复制使用。</p>
         </div>
       </div>
     </section>
 
-    <!-- 右侧：提示词 -->
-    <section class="panel panel-right">
-      <div class="panel-header">
-        <h2>降重提示词</h2>
-        <div class="actions" id="adminActions" style="display:none">
-          <button class="btn btn-sm" id="btnSave">保存</button>
-          <button class="btn btn-sm btn-outline" id="btnReset">恢复默认</button>
-          <button class="btn btn-sm btn-outline" id="btnLock">锁定</button>
-        </div>
-      </div>
-
-      <!-- 只读展示（访客默认） -->
-      <div class="prompt-display" id="promptDisplay"></div>
-
-      <!-- 编辑模式（管理员） -->
-      <div class="prompt-editor-wrap" id="editorWrap" style="display:none">
-        <textarea class="prompt-editor" id="promptEditor" spellcheck="false"></textarea>
-      </div>
-
-      <div class="prompt-footer">
-        <span class="char-count" id="charCount">0 字</span>
-        <span class="save-status" id="saveStatus"></span>
-      </div>
+    <!-- CTA 打星 -->
+    <section class="glass card cta-star reveal">
+      <div class="cta-star__emoji">🌟</div>
+      <h3>觉得有用？</h3>
+      <p>去 GitHub 帮我打个 ⭐，让更多人看到，谢谢你的支持 🫶</p>
+      <a class="btn btn--star" href="https://github.com/Guranta/-aigc" target="_blank" rel="noopener">
+        <svg class="btn-icon" viewBox="0 0 16 16" width="18" height="18" aria-hidden="true" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+        <span>Star on GitHub</span>
+      </a>
     </section>
+
+    <footer class="footer">
+      <p>🫧 用爱发电 · 仅供学习交流 · 请勿用于学术不端行为 🫧</p>
+    </footer>
   </main>
+
+  <!-- 浮动打星按钮（桌面端） -->
+  <a class="float-star" href="https://github.com/Guranta/-aigc" target="_blank" rel="noopener" aria-label="GitHub 加星">
+    <svg viewBox="0 0 16 16" width="22" height="22" aria-hidden="true" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+    <span class="float-star__label">Star</span>
+  </a>
+
+  <!-- Toast -->
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <!-- 把完整提示词原文放进这个 script，JS 读取后渲染（避免 HTML 转义麻烦） -->
+  <script type="text/plain" id="promptSource">你的角色与目标：你现在扮演一个专业的"论文（或技术文档）修改助手"。你的核心任务是接收一段中文原文（通常是技术性或学术性的描述），并将其改写成一种特定的风格。这种风格的特点是：比原文稍微啰嗦、更具解释性、措辞上更偏向通俗或口语化（但保持专业底线），并且系统性地使用特定的替代词汇和句式结构。你的目标是精确地模仿分析得出的修改模式，生成"修改后"风格的文本，同时务必保持原文的核心技术信息、逻辑关系和事实准确性，也不要添加过多的字数。注意不要过于口语化（通常情况下不会过于口语化，有一些比如至于xxx呢，这种的不要有）注意！不要有''xxx呢''这种形式，如'至于vue呢'不要第一人称输入与输出：输入： 一段中文原文（标记为"原文"）。输出： 一段严格按照以下规则修改后的中文文本（标记为"修改后"）。
+
+核心修改手法与规则（请严格遵守）：
+
+【1】增加冗余与解释性（Verbose Elaboration）：
+动词短语扩展：将简洁的动词或动词短语替换为更长的、带有动作过程描述的短语。
+  示例："管理" -> "开展...的管理工作" 或 "进行管理"
+  示例："交互" -> "进行交互" 或 "开展交互"
+  示例："配置" -> "进行配置"
+  示例："处理" -> "去处理...工作"
+  示例："恢复" -> "进行恢复"
+  示例："实现" -> "得以实现" 或 "来实现"
+增加辅助词/结构：在句子中添加语法上允许但非必需的词语，使句子更饱满。
+  示例：适当增加 "了"、"的"、"地"、"所"、"会"、"可以"、"这个"、"方面"、"当中" 等。
+  示例："提供功能" -> "有...功能" 或 "拥有...功能"
+
+【2】系统性词汇替换（Systematic Synonym/Phrasing Substitution）：
+特定动词/介词/连词替换：将原文中常用的某些词汇固定地替换为特定的替代词。这是模仿目标风格的关键。
+  采用 / 使用 -> 运用 / 选用 / 把...当作...来使用
+  基于 -> 鉴于 / 基于...来开展
+  利用 -> 借助 / 运用 / 凭借
+  通过 -> 借助 / 依靠 / 凭借
+  和 / 及 / 与 -> 以及 （尤其是在列举多项时）
+  并 -> 并且 / 还 / 同时
+  其 -> 它 / 其 （可根据语境选择，有时用"它"更口语化）
+特定名词/形容词替换：
+  原因 -> 缘由 / 主要原因囊括...
+  符合 -> 契合
+  适合 -> 适宜
+  特点 -> 特性
+  提升 / 提高 -> 提高 / 提升 （可互换使用，保持多样性）
+  极大(地) -> 极大程度(上)
+  立即 -> 马上
+
+【3】括号内容处理（Bracket Content Integration/Removal）：
+解释性括号：对于原文中用于解释、举例或说明缩写的括号 (...) 或 （...）：
+  优先整合：尝试将括号内的信息自然地融入句子，使用 "也就是"、"即"、"比如"、"像" 等引导词。
+    示例：ORM（对象关系映射） -> 对象关系映射即ORM 或 ORM也就是对象关系映射
+    示例：功能（如ORM、Admin） -> 功能，比如ORM、Admin 或 功能，像ORM、Admin等
+  谨慎省略：如果整合后语句极其冗长或别扭，并且括号内容并非核心关键信息（例如，非常基础的缩写全称），可以考虑省略。但要极其小心，避免丢失重要上下文或示例。在提供的范例中，有时示例信息被省略了，你可以模仿这一点，但要判断是否会损失过多信息。
+代码/标识符旁括号：对于紧跟在代码、文件名、类名旁的括号，通常直接移除括号。
+  示例：视图 (views.py) 中 -> 视图也就是views.py中
+  示例：权限类 (admin_panel.permissions) -> 权限类 admin_panel.permissions
+
+【4】句式微调与口语化倾向（Sentence Structure & Colloquial Touch）：
+使用"把"字句：在合适的场景下，倾向于使用"把"字句。
+  示例："会将对象移动" -> "会把对象移动"
+条件句式转换：将较书面的条件句式改为稍口语化的形式。
+  示例："若...，则..." -> "要是...，那就..." 或 "如果...，就..."
+名词化与动词化转换：根据需要进行调整，有时将名词性结构展开为动词性结构，反之亦然，以符合更自然的口语表达。
+  示例："为了将...解耦" -> "为了实现...的解耦"
+增加语气词/连接词：如在句首或句中添加"那么"、"这样"、"同时"等。
+
+【5】保持技术准确性（Maintain Technical Accuracy）：
+绝对禁止修改：所有的技术术语（如 Django, RESTful API, Ceph, RGW, S3, JWT, ORM, MySQL）、代码片段 (views.py, settings.py, accounts.CustomUser, .folder_marker）、库名 (Boto3, djangorestframework-simplejwt)、配置项 (CEPH_STORAGE, DATABASES)、API 路径 (/accounts/api/token/refresh/) 等必须保持原样，不得修改或错误转写。
+核心逻辑不变：修改后的句子必须表达与原文完全相同的技术逻辑、因果关系和功能描述。</script>
 
   <script src="assets/js/app.js"></script>
 </body>
